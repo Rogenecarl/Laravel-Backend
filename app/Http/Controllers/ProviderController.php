@@ -2,23 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreProviderRequest;
 use App\Models\Provider;
 use Illuminate\Http\Request;
+use App\Services\ProviderService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\ProviderResource;
+use App\Http\Requests\StoreProviderRequest;
+use App\Http\Requests\UpdateProviderRequest;
 
 class ProviderController extends Controller
 {
+    protected $providerService;
+
+    public function __construct(ProviderService $providerService)
+    {
+        $this->providerService = $providerService;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $provider = Provider::all();
+        $providers = $this->providerService->getAllProviders();
 
         return response()->json([
-            'provider' => $provider,
-            'message' => 'Provider list retrieved successfully',
-        ], 201);
+            'providers' => ProviderResource::collection($providers),
+            'count' => $providers->count(),
+            'message' => 'Providers retrieved successfully',
+        ], 200);
     }
 
     /**
@@ -26,10 +38,18 @@ class ProviderController extends Controller
      */
     public function store(StoreProviderRequest $request)
     {
-        $provider = Provider::create($request->validated());
+
+        // 1. Get the validated data from the form request.
+        $providerData = $request->validated();
+
+        // 2. Get the authenticated user's ID and add it to the data array.
+        $providerData['user_id'] = Auth::id(); // or $request->user()->id
+
+        // 3. Pass the complete data array to the service.
+        $provider = $this->providerService->createProvider($providerData);
 
         return response()->json([
-            'provider' => $provider,
+            'provider' => new ProviderResource($provider),
             'message' => 'Provider created successfully',
         ], 201);
     }
@@ -39,15 +59,24 @@ class ProviderController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $provider = $this->providerService->getProvider($id);
+        return response()->json([
+            'provider' => new ProviderResource($provider),
+            'message' => 'Provider retrieved successfully',
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateProviderRequest $request, Provider $provider)
     {
-        //
+        $provider->update($request->validated());
+
+        return response()->json([
+            'provider' => new ProviderResource($provider),
+            'message' => 'Provider updated successfully',
+        ], 200);
     }
 
     /**

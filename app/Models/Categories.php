@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Categories extends Model
@@ -21,7 +20,6 @@ class Categories extends Model
         'is_active',
         'sort_order',
     ];
-
 
     protected static function booted(): void
     {

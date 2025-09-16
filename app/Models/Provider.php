@@ -19,6 +19,7 @@ class Provider extends Model
         'healthcare_name',
         'description',
         'phone_number',
+        'cover_photo',
         'email',
         'status',
         'address',

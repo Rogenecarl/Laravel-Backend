@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreProviderRequest extends FormRequest
+class UpdateProviderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,7 +29,7 @@ class StoreProviderRequest extends FormRequest
             "healthcare_name" => "required|string|max:255",
             "description" => "required|string|max:1000",
             "phone_number" => "required|string|max:20",
-            "email" => "required|string|email|max:255|unique:providers,email",
+            "email" => ["sometimes", "required", "string", "email", "max:255", Rule::unique("providers", "email")->ignore($this->route('provider'))],
             "status" => "required|in:verified,pending",
             "cover_photo" => "nullable|string|max:255",
             "address" => "required|string|max:255",
@@ -37,13 +38,6 @@ class StoreProviderRequest extends FormRequest
             "latitude" => "required|numeric",
             "longitude" => "required|numeric",
             "verified_at" => "nullable|date",
-            "services" => "array",
-            "services.*.name" => "required|string|max:255",
-            "services.*.description" => "nullable|string",
-            "services.*.price_min" => "required|integer|min:0",
-            "services.*.price_max" => "required|integer|min:0|gte:services.*.price_min",
-            "services.*.is_active" => "boolean",
-            "services.*.sort_order" => "integer|min:0",
         ];
     }
 }

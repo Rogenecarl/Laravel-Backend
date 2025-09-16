@@ -18,7 +18,6 @@ return new class extends Migration
                 'professional_license',
                 'tax_clearance',
                 'other']);
-            
             $table->string('file_path');
             $table->string('file_name');
             $table->string('file_type');
