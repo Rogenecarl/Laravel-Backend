@@ -22,7 +22,7 @@ class ProviderResource extends JsonResource
             'healthcare_name' => $this->healthcare_name,
             'description' => $this->description,
             'phone_number' => $this->phone_number,
-            'cover_photo' => $this->cover_photo,
+            'cover_photo' => $this->cover_photo ? asset('storage/' . $this->cover_photo) : null,
             'email' => $this->email,
             'status' => $this->status,
             'address' => $this->address,
@@ -36,8 +36,12 @@ class ProviderResource extends JsonResource
             'services' => $this->when($this->relationLoaded('services'), function () {
                 return ServiceResource::collection($this->services);
             }),
-
-
+            'operating_hours' => $this->when($this->relationLoaded('operatingHours'), function () {
+                return OperatingHourResource::collection($this->operatingHours);
+            }),
+            'documents' => $this->when($this->relationLoaded('documents'), function () {
+                return DocumentResource::collection($this->documents);
+            })
         ];
     }
 }
