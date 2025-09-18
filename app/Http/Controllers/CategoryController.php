@@ -10,7 +10,7 @@ use App\Http\Resources\ProviderResource;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 
-class Category extends Controller
+class CategoryController extends Controller
 {
 
     protected $categoryService;

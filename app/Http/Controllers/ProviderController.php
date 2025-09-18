@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Provider;
 use Illuminate\Http\Request;
 use App\Services\ProviderService;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ProviderResource;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\UpdateProviderRequest;
@@ -43,7 +42,7 @@ class ProviderController extends Controller
         $providerData = $request->validated();
 
         // 2. Get the authenticated user's ID and add it to the data array.
-        $providerData['user_id'] = Auth::id(); // or $request->user()->id
+        $providerData['user_id'] = $request->user()->id;
 
         // 3. Pass the complete data array to the service.
         $provider = $this->providerService->createProvider($providerData);
@@ -85,5 +84,25 @@ class ProviderController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function search(Request $request)
+    {
+        // We pass the entire request so the service can pull out the filters it needs.
+        $providers = $this->providerService->searchProviders($request->all());
+
+        return ProviderResource::collection($providers);
+    }
+
+    public function searchSuggestions(Request $request)
+    {
+
+        $validated = $request->validate([
+            'term' => 'required|string|max:255',
+        ]);
+
+        $suggestions = $this->providerService->getSearchSuggestions($validated['term']);
+
+        return response()->json($suggestions);
     }
 }

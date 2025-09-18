@@ -7,10 +7,10 @@ use App\Http\Resources\UserResource;
 
 class UserController extends Controller
 {
-   //get authenticated user
+    //get authenticated user
     public function user(Request $request)
     {
-        return new UserResource($request->user());
+        return new UserResource($request->user()->load('provider'));
     }
 
     /**

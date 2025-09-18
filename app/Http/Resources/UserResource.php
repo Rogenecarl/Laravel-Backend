@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'name' => ucfirst($this->name),
             'email' => $this->email,
             'role' => $this->role,
+            'provider' => new ProviderResource($this->whenLoaded('provider')),
         ];
     }
 }

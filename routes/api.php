@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Service;
-use App\Http\Controllers\Category;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\Auth\AuthController;
@@ -16,15 +16,23 @@ Route::controller(AuthController::class)->group(function () {
 
 // --- Publicly Viewable Data (Read-Only) ---
 // We only allow the 'index' (list) and 'show' (single item) methods.
-// show all providers
+Route::get('providers/search', [ProviderController::class, 'search']);
+
+// Add this new route for real-time search suggestions.
+Route::get('providers/suggestions', [ProviderController::class, 'searchSuggestions']);
+
+// 2. Now define the resource routes. Laravel will check for 'search' first.
 Route::apiResource('providers', ProviderController::class)->only(['index', 'show']);
 
-// show providers by category filter
-Route::get('category/{categoryId}', [Category::class, 'indexByCategory']);
-Route::apiResource('categories', Category::class)->only(['index', 'show']);
+// It's good practice to group related routes.
+Route::prefix('categories')->controller(CategoryController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('/{category}', 'show');
+    Route::get('/{categoryId}/providers', 'indexByCategory'); // Renamed for clarity
+});
 
 //get services by provider id
-Route::apiResource('services', Service::class)->only(['index', 'show']);
+Route::apiResource('services', ServiceController::class)->only(['index', 'show']);
 
 // --- General Authenticated Routes (Any Role) ---
 // Any logged-in user (admin, provider, or user) can access these.
@@ -37,19 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
 //admin middleware to protect routes
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
-    Route::apiResource('categories', Category::class)->except(['index', 'show']);
+    Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
 
-    Route::get('statistics', function () {
-        $userCount = \App\Models\User::count();
-        $providerCount = \App\Models\Provider::count();
-        $categoryCount = \App\Models\Categories::count();
-
-        return response()->json([
-            'users' => $userCount,
-            'providers' => $providerCount,
-            'categories' => $categoryCount,
-        ]);
-    });
 });
 
 //provider middleware to protect routes
@@ -60,7 +57,7 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
     Route::apiResource('providers', ProviderController::class)->except(['index', 'show']);
 
     // Providers can manage their own services
-    Route::apiResource('services', Service::class)->except(['index', 'show']);
+    Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
 });
 
 //user middleware to protect routes
