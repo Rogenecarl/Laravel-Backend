@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OperatingHoursController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -34,6 +36,17 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
 //get services by provider id
 Route::apiResource('services', ServiceController::class)->only(['index', 'show']);
 
+// Provider operating hours (publicly accessible)
+Route::get('providers/{providerId}/operating-hours', [OperatingHoursController::class, 'index']);
+
+// Available appointment slots (publicly accessible)
+// get available slots for specific date GET /api/providers/{providerId}/available-slots?date=2025-01-15
+Route::get('providers/{providerId}/available-slots', [AppointmentController::class, 'getAvailableSlots']); 
+// get available slots for date Range calendar view GET /api/providers/{providerId}/available-slots-range?start_date=2025-01-15&end_date=2025-01-21
+Route::get('providers/{providerId}/available-slots-range', [AppointmentController::class, 'getAvailableSlotsForRange']);
+// get provider schedule information
+Route::get('providers/{providerId}/schedule-info', [AppointmentController::class, 'getProviderScheduleInfo']);
+
 // --- General Authenticated Routes (Any Role) ---
 // Any logged-in user (admin, provider, or user) can access these.
 Route::middleware('auth:sanctum')->group(function () {
@@ -64,5 +77,9 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
     // Example: A regular user can view their booking history
     // Route::get('my-bookings', [BookingController::class, 'index']);
+
+    Route::post('appointments', [AppointmentController::class, 'store']);
+    Route::get('user/appointments', [AppointmentController::class, 'indexForUser']);
+    Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
 });
 

@@ -5,28 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'appointment_number',
         'user_id',
         'provider_id',
-        'bookable_id',
-        'bookable_type',
         'start_time',
         'end_time',
         'status',
         'notes',
-        'price_at_booking',
-        'cancelled_at',
-        'cancellation_reason',
-        'cancelled_by',
-        'reminder_sent',
+        'total_price',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'total_price' => 'decimal:2',
     ];
 
     /**
@@ -39,7 +48,6 @@ class Appointment extends Model
 
     /**
      * Get the provider for this appointment.
-     * ADDED: This is an essential relationship.
      */
     public function provider(): BelongsTo
     {
@@ -47,11 +55,12 @@ class Appointment extends Model
     }
 
     /**
-     * Get the parent bookable model (can be a Service or a Package).
-     * ADDED: This is the polymorphic relationship.
+     * The services that belong to the appointment.
      */
-    public function bookable(): MorphTo
+    public function services(): BelongsToMany
     {
-        return $this->morphTo();
+        return $this->belongsToMany(Services::class, 'appointment_service', 'appointment_id', 'service_id')
+            ->withPivot('price_at_booking')
+            ->withTimestamps();
     }
 }

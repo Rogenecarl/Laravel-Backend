@@ -6,23 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OperatingHour extends Model
+class BreakTime extends Model
 {
-    /** @use HasFactory<\Database\Factories\OperatingHourFactory> */
     use HasFactory;
 
     protected $fillable = [
         'provider_id',
+        'name',
         'day_of_week',
         'start_time',
         'end_time',
-        'is_closed',
     ];
 
     protected $casts = [
-        'is_closed' => 'boolean',
+        'day_of_week' => 'integer',
     ];
 
+    /**
+     * Get the provider that owns the break time.
+     */
     public function provider(): BelongsTo
     {
         return $this->belongsTo(Provider::class);

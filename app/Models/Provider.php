@@ -28,6 +28,7 @@ class Provider extends Model
         'latitude',
         'longitude',
         'verified_at',
+        'slot_duration_minutes',
     ];
 
     public function user(): BelongsTo
@@ -53,6 +54,11 @@ class Provider extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function breakTimes(): HasMany
+    {
+        return $this->hasMany(BreakTime::class);
     }
 
 }
