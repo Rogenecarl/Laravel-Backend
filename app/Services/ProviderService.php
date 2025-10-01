@@ -159,5 +159,62 @@ class ProviderService
             ->limit(10)
             ->get();
     }
+
+    public function getProvidersAsGeoJSON(): array
+    {
+        // 1. Fetch only verified providers and select all necessary columns for the map popup
+        $providers = Provider::query()
+            ->where('status', 'verified')
+            ->select([
+                'id', 
+                'healthcare_name', 
+                'description',
+                'address', 
+                'city',
+                'province',
+                'latitude', 
+                'longitude', 
+                'category_id',
+                'cover_photo',
+                'email',
+                'phone_number'
+            ])
+            ->get();
+
+        // 2. Map the collection of providers into a GeoJSON Feature array
+        $features = $providers->map(function ($provider) {
+            // Ensure longitude and latitude are correctly cast to floats
+            $longitude = (float) $provider->longitude;
+            $latitude = (float) $provider->latitude;
+
+            return [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [$longitude, $latitude],
+                ],
+                'properties' => [
+                    // 'properties' holds the data you'll want to show in a popup
+                    'id' => $provider->id,
+                    'name' => $provider->healthcare_name,
+                    'healthcare_name' => $provider->healthcare_name,
+                    'description' => $provider->description,
+                    'address' => $provider->address,
+                    'city' => $provider->city,
+                    'province' => $provider->province,
+                    'categoryId' => $provider->category_id, // Useful for frontend filtering
+                    'cover_photo' => $provider->cover_photo ? asset("storage/{$provider->cover_photo}") : null,
+                    'email' => $provider->email,
+                    'phone_number' => $provider->phone_number,
+                ],
+            ];
+        })->all(); // Convert the Laravel Collection to a plain array
+
+        // 3. Wrap the features in a GeoJSON FeatureCollection object
+        return [
+            'type' => 'FeatureCollection',
+            'features' => $features,
+        ];
+    }
 }
 

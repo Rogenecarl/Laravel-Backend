@@ -34,6 +34,7 @@ class AppointmentResource extends JsonResource
                     'id' => $this->provider->id,
                     'name' => $this->provider->healthcare_name,
                     'email' => $this->provider->email,
+                    'cover_photo' => $this->provider->cover_photo ? asset('storage/' . $this->provider->cover_photo) : null,
                     // Add other provider fields as needed
                 ];
             }),

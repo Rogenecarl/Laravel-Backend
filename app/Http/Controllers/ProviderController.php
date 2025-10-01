@@ -105,4 +105,11 @@ class ProviderController extends Controller
 
         return response()->json($suggestions);
     }
+
+    public function getLocations()
+    {
+        $geoJsonData = $this->providerService->getProvidersAsGeoJSON();
+
+        return response()->json($geoJsonData);
+    }
 }
