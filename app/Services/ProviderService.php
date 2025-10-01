@@ -165,15 +165,16 @@ class ProviderService
         // 1. Fetch only verified providers and select all necessary columns for the map popup
         $providers = Provider::query()
             ->where('status', 'verified')
+            ->with('services') // Eager load services
             ->select([
-                'id', 
-                'healthcare_name', 
+                'id',
+                'healthcare_name',
                 'description',
-                'address', 
+                'address',
                 'city',
                 'province',
-                'latitude', 
-                'longitude', 
+                'latitude',
+                'longitude',
                 'category_id',
                 'cover_photo',
                 'email',
@@ -206,6 +207,15 @@ class ProviderService
                     'cover_photo' => $provider->cover_photo ? asset("storage/{$provider->cover_photo}") : null,
                     'email' => $provider->email,
                     'phone_number' => $provider->phone_number,
+                    'services' => $provider->services->map(function ($service) {
+                        return [
+                            'id' => $service->id,
+                            'name' => $service->name,
+                            'description' => $service->description,
+                            'price_min' => $service->price_min,
+                            'price_max' => $service->price_max,
+                        ];
+                    }),
                 ],
             ];
         })->all(); // Convert the Laravel Collection to a plain array
