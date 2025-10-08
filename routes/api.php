@@ -74,6 +74,9 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
 
     // Providers can manage their own services
     Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
+
+    // A provider can get a list of their own appointments.
+    Route::get('/provider/appointments', [AppointmentController::class, 'indexForProvider']);
 });
 
 //user middleware to protect routes

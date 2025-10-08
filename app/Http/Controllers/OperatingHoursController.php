@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\OperatingHourResource;
-use App\Models\Provider;
 use App\Services\OperatingHoursService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OperatingHoursController extends Controller

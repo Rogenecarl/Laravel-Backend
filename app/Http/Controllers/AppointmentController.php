@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\Provider;
 use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 
@@ -221,7 +222,7 @@ class AppointmentController extends Controller
     public function getProviderScheduleInfo(int $providerId)
     {
         try {
-            $provider = \App\Models\Provider::with('operatingHours')
+            $provider = Provider::with('operatingHours')
                 ->select('id', 'healthcare_name', 'slot_duration_minutes')
                 ->findOrFail($providerId);
 
@@ -247,5 +248,26 @@ class AppointmentController extends Controller
                 'error' => $e->getMessage()
             ], 404);
         }
+    }
+
+    /**
+     * Display a listing of the appointments for the authenticated provider.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Resources\Json\JsonResource
+     */
+    public function indexForProvider(Request $request)
+    {
+        // Get the authenticated user's provider profile
+        $provider = $request->user()->provider;
+
+        if (!$provider) {
+            return response()->json(['message' => 'Provider profile not found'], 404);
+        }
+
+        // Pass all query parameters from the URL to the service
+        $appointments = $this->appointmentService->getAppointmentsForProvider($provider, $request->all());
+
+        return AppointmentResource::collection($appointments);
     }
 }

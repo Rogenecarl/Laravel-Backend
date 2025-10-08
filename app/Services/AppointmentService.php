@@ -4,10 +4,9 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\Provider;
-use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Exception;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class AppointmentService
 {
@@ -294,5 +293,64 @@ class AppointmentService
         } while ($exists);
 
         return $appointmentNumber;
+    }
+
+    /**
+     * Get a paginated and filtered list of appointments for a specific provider.
+     *
+     * @param Provider $provider
+     * @param array $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAppointmentsForProvider(Provider $provider, array $filters = []): LengthAwarePaginator
+    {
+        $query = $provider->appointments()
+            ->with(['user', 'services']) // Eager load relationships
+            ->latest('start_time'); // Default sort order
+
+        // --- Apply Status Filters ---
+        $query->when($filters['status'] ?? null, function ($query, $status) {
+            // Special filter for "Today"
+            if ($status === 'today') {
+                return $query->whereDate('start_time', today());
+            }
+            // Special filter for "Upcoming"
+            if ($status === 'upcoming') {
+                return $query->where('start_time', '>=', now());
+            }
+            // Special filter for "History" (completed or no_show)
+            if ($status === 'history') {
+                return $query->whereIn('status', ['completed', 'no_show']);
+            }
+            // Standard status filter (pending, confirmed, cancelled)
+            return $query->where('status', $status);
+        });
+
+        // --- Apply Date Filter ---
+        $query->when($filters['date'] ?? null, function ($query, $date) {
+            return $query->whereDate('start_time', $date);
+        });
+
+        // --- Apply Search Term Filter ---
+        $query->when($filters['search'] ?? null, function ($query, $searchTerm) {
+            return $query->where(function ($q) use ($searchTerm) {
+                // Search in appointment number
+                $q->where('appointment_number', 'like', "%{$searchTerm}%")
+                    // Search in the patient's name
+                    ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                        $userQuery->where('name', 'like', "%{$searchTerm}%");
+                    })
+                    // Search in the booked services' names
+                    ->orWhereHas('services', function ($serviceQuery) use ($searchTerm) {
+                        $serviceQuery->where('name', 'like', "%{$searchTerm}%");
+                    });
+            });
+        });
+
+        // --- Pagination ---
+        // Get the requested number of items per page, defaulting to 25
+        $perPage = $filters['per_page'] ?? 25;
+
+        return $query->paginate($perPage);
     }
 }
