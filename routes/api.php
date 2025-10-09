@@ -77,6 +77,18 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
 
     // A provider can get a list of their own appointments.
     Route::get('/provider/appointments', [AppointmentController::class, 'indexForProvider']);
+
+    // Get appointment counts by status for the provider
+    Route::get('/provider/appointments/counts', [AppointmentController::class, 'getProviderAppointmentCounts']);
+
+    // A provider can confirm a pending appointment.
+    Route::post('/appointments/{appointment}/confirm', [AppointmentController::class, 'confirmBookingProvider']);
+
+    // A provider can mark an appointment as completed.
+    Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'completeBookingProvider']);
+
+    // A provider can cancel an appointment.
+    Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBookingProvider']);
 });
 
 //user middleware to protect routes
@@ -86,6 +98,6 @@ Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
 
     Route::post('appointments', [AppointmentController::class, 'store']);
     Route::get('user/appointments', [AppointmentController::class, 'indexForUser']);
-    Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+    Route::post('appointments/{appointment}/canceluser', [AppointmentController::class, 'cancelForUser']);
 });
 

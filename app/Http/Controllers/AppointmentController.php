@@ -122,7 +122,7 @@ class AppointmentController extends Controller
     /**
      * Cancel an appointment
      */
-    public function cancel(Request $request, Appointment $appointment)
+    public function cancelForUser(Request $request, Appointment $appointment)
     {
         // Ensure the user can only cancel their own appointments
         if ($appointment->user_id !== $request->user()->id) {
@@ -254,7 +254,7 @@ class AppointmentController extends Controller
      * Display a listing of the appointments for the authenticated provider.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Resources\Json\JsonResource
+     * @return \Illuminate\Http\Resources\Json\JsonResource|\Illuminate\Http\JsonResponse
      */
     public function indexForProvider(Request $request)
     {
@@ -269,5 +269,99 @@ class AppointmentController extends Controller
         $appointments = $this->appointmentService->getAppointmentsForProvider($provider, $request->all());
 
         return AppointmentResource::collection($appointments);
+    }
+
+    /**
+     * Get appointment counts by status for the authenticated provider.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProviderAppointmentCounts(Request $request)
+    {
+        // Get the authenticated user's provider profile
+        $provider = $request->user()->provider;
+
+        if (!$provider) {
+            return response()->json(['message' => 'Provider profile not found'], 404);
+        }
+
+        $counts = $this->appointmentService->getAppointmentCountsForProvider($provider);
+
+        return response()->json($counts);
+    }
+
+    /**
+     * Confirm a pending appointment.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Appointment  $appointment
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirmBookingProvider(Request $request, Appointment $appointment)
+    {
+        // 1. Authorization: Does this provider own this appointment?
+        $this->authorize('update', $appointment); // We'll create a policy for this
+
+        // 2. Business Logic: Can this appointment be confirmed?
+        if ($appointment->status !== 'pending') {
+            return response()->json(['message' => 'Only pending appointments can be confirmed.'], 422);
+        }
+
+        // 3. Perform the action
+        $this->appointmentService->updateStatus($appointment, 'confirmed');
+
+        // 4. Trigger Side Effects (e.g., Notifications)
+        // $appointment->user->notify(new AppointmentConfirmed($appointment));
+
+        return response()->json([
+            'message' => 'Appointment confirmed successfully.',
+            'appointment' => new AppointmentResource($appointment->fresh()),
+        ]);
+    }
+
+    /**
+     * Mark an appointment as completed.
+     */
+    public function completeBookingProvider(Request $request, Appointment $appointment)
+    {
+        $this->authorize('update', $appointment);
+
+        if ($appointment->status !== 'confirmed') {
+            return response()->json(['message' => 'Only confirmed appointments can be marked as complete.'], 422);
+        }
+
+        $this->appointmentService->updateStatus($appointment, 'completed');
+
+        return response()->json([
+            'message' => 'Appointment marked as complete.',
+            'appointment' => new AppointmentResource($appointment->fresh()),
+        ]);
+    }
+
+    /**
+     * Cancel an appointment (as a provider).
+     */
+    public function cancelBookingProvider(Request $request, Appointment $appointment)
+    {
+        $this->authorize('update', $appointment);
+
+        $validated = $request->validate([
+            'cancellation_reason' => 'required|string|max:1000',
+        ]);
+
+        if ($appointment->status === 'completed' || $appointment->status === 'cancelled') {
+            return response()->json(['message' => 'This appointment can no longer be cancelled.'], 422);
+        }
+
+        $this->appointmentService->cancel($appointment, $validated['cancellation_reason'], $request->user());
+
+        // Notify the patient that the provider cancelled
+        // $appointment->user->notify(new AppointmentCancelledByProvider($appointment));
+
+        return response()->json([
+            'message' => 'Appointment cancelled successfully.',
+            'appointment' => new AppointmentResource($appointment->fresh()),
+        ]);
     }
 }

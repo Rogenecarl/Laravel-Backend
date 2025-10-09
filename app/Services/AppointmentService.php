@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\Provider;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -310,19 +311,7 @@ class AppointmentService
 
         // --- Apply Status Filters ---
         $query->when($filters['status'] ?? null, function ($query, $status) {
-            // Special filter for "Today"
-            if ($status === 'today') {
-                return $query->whereDate('start_time', today());
-            }
-            // Special filter for "Upcoming"
-            if ($status === 'upcoming') {
-                return $query->where('start_time', '>=', now());
-            }
-            // Special filter for "History" (completed or no_show)
-            if ($status === 'history') {
-                return $query->whereIn('status', ['completed', 'no_show']);
-            }
-            // Standard status filter (pending, confirmed, cancelled)
+            // Standard status filters: pending, confirmed, completed, cancelled
             return $query->where('status', $status);
         });
 
@@ -352,5 +341,53 @@ class AppointmentService
         $perPage = $filters['per_page'] ?? 25;
 
         return $query->paginate($perPage);
+    }
+
+    /**
+     * Get appointment counts by status for a specific provider.
+     *
+     * @param Provider $provider
+     * @return array
+     */
+    public function getAppointmentCountsForProvider(Provider $provider): array
+    {
+        // Get all appointments for this provider
+        $appointments = $provider->appointments()->get();
+
+        // Count by status
+        $statusCounts = $appointments->groupBy('status')->map->count();
+
+        return [
+            'all' => $appointments->count(),
+            'pending' => $statusCounts->get('pending', 0),
+            'confirmed' => $statusCounts->get('confirmed', 0),
+            'completed' => $statusCounts->get('completed', 0),
+            'cancelled' => $statusCounts->get('cancelled', 0) + $statusCounts->get('no_show', 0),
+        ];
+    }
+
+    public function updateStatus(Appointment $appointment, string $newStatus): Appointment
+    {
+        $appointment->update(['status' => $newStatus]);
+        return $appointment;
+    }
+
+    /**
+     * Cancel an appointment and record the details.
+     *
+     * @param Appointment $appointment
+     * @param string $reason
+     * @param User $cancellingUser The user who is performing the cancellation.
+     * @return Appointment
+     */
+    public function cancel(Appointment $appointment, string $reason, User $cancellingUser): Appointment
+    {
+        $appointment->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $reason,
+            'cancelled_at' => now(),
+            'cancelled_by' => $cancellingUser->id,
+        ]);
+        return $appointment;
     }
 }
