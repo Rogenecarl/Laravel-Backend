@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\Provider;
 use App\Models\User;
+use App\Notifications\NewAppointmentNotification;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -43,6 +44,12 @@ class AppointmentService
 
             // Load relationships for the response
             $appointment->load(['user', 'provider', 'services']);
+
+            $providerUser = $appointment->provider->user;
+
+            if ($providerUser) {
+                $providerUser->notify(new NewAppointmentNotification($appointment));
+            }
 
             return $appointment;
         });

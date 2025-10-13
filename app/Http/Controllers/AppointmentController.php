@@ -6,6 +6,7 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Models\Provider;
+use App\Notifications\AppointmentConfirmedNotification;
 use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 
@@ -312,7 +313,7 @@ class AppointmentController extends Controller
         $this->appointmentService->updateStatus($appointment, 'confirmed');
 
         // 4. Trigger Side Effects (e.g., Notifications)
-        // $appointment->user->notify(new AppointmentConfirmed($appointment));
+        $appointment->user->notify(new AppointmentConfirmedNotification($appointment));
 
         return response()->json([
             'message' => 'Appointment confirmed successfully.',

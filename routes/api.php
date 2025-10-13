@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperatingHoursController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -61,6 +62,13 @@ Route::get('providers/{providerId}/services', [ServiceController::class, 'getSer
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [UserController::class, 'user']);
     Route::post('logout', [AuthController::class, 'logout']);
+
+    Route::prefix('notifications')->controller(NotificationController::class)->group(function () {
+        Route::get('/', 'index');                  // Get all notifications
+        Route::post('/mark-all-as-read', 'markAllAsRead'); // Mark all as read
+        Route::post('/{notification}', 'markAsRead');      // Mark a single one as read
+    });
+
 });
 
 //admin middleware to protect routes
