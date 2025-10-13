@@ -364,4 +364,35 @@ class AppointmentController extends Controller
             'appointment' => new AppointmentResource($appointment->fresh()),
         ]);
     }
+
+    /**
+     * Display a listing of appointments for the authenticated provider's calendar view.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Resources\Json\JsonResource|\Illuminate\Http\JsonResponse
+     */
+    public function indexForCalendar(Request $request)
+    {
+        // 1. Validate the incoming request parameters
+        $validated = $request->validate([
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
+
+        // 2. Get the authenticated user's provider profile
+        $provider = $request->user()->provider;
+        if (!$provider) {
+            return response()->json(['message' => 'User does not have a provider profile.'], 403);
+        }
+
+        // 3. Call the service to get the data
+        $appointments = $this->appointmentService->getAppointmentsForDateRange(
+            $provider,
+            $validated['start_date'],
+            $validated['end_date']
+        );
+
+        // 4. Return the data using the existing AppointmentResource
+        return AppointmentResource::collection($appointments);
+    }
 }

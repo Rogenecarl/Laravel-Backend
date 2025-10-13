@@ -17,8 +17,11 @@ class AppointmentResource extends JsonResource
         return [
             'id' => $this->id,
             'appointment_number' => $this->appointment_number,
-            'start_time' => $this->start_time,
-            'end_time' => $this->end_time,
+            'start_time' => $this->start_time?->toISOString(),
+            'end_time' => $this->end_time?->toISOString(),
+            'formatted_start_time' => $this->start_time?->format('g:i A'), // 2:30 PM
+            'formatted_end_time' => $this->end_time?->format('g:i A'), // 3:30 PM
+            'formatted_date' => $this->start_time?->format('M j, Y'), // Jan 15, 2024
             'status' => $this->status,
             'notes' => $this->notes,
             'total_price' => $this->total_price,

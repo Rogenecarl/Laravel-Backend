@@ -390,4 +390,21 @@ class AppointmentService
         ]);
         return $appointment;
     }
+
+    public function getAppointmentsForDateRange(Provider $provider, string $startDate, string $endDate)
+    {
+        // We only care about appointments that are not cancelled for the calendar view.
+        // You might want to show cancelled ones differently, but this is a good start.
+        $activeStatuses = ['pending', 'confirmed', 'completed', 'no_show'];
+
+        return $provider->appointments()
+            ->with(['user:id,name', 'services:id,name']) // Eager load only what you need!
+            ->whereIn('status', $activeStatuses)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where('start_time', '<=', $endDate . ' 23:59:59')
+                    ->where('end_time', '>=', $startDate . ' 00:00:00');
+            })
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
 }
