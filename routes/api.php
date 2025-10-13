@@ -45,12 +45,13 @@ Route::prefix('categories')->controller(CategoryController::class)->group(functi
     Route::get('/{categoryId}/providers', 'indexByCategory'); // Renamed for clarity
 });
 
-Route::get('{providerId}/operating-hours', [OperatingHoursController::class, 'index']);
+// Route::get('{providerId}/operating-hours', [OperatingHoursController::class, 'index']);
 
 Route::apiResource('providers', ProviderController::class)->only(['index', 'show']);
 
 //get services by provider id
 Route::apiResource('services', ServiceController::class)->only(['index', 'show']);
+Route::get('providers/{providerId}/services', [ServiceController::class, 'getServicesByProvider']);
 
 /*
 |--------------------------------------------------------------------------
@@ -77,9 +78,10 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
         Route::apiResource('providers', ProviderController::class)->except(['index', 'show']);
     });
 
-    // ServiceController Routes
+    // ServiceController Routes - Full CRUD for providers
     Route::controller(ServiceController::class)->group(function () {
         Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
+        Route::get('provider/services', 'getMyServices'); // Get services for authenticated provider
     });
 
     Route::controller(AppointmentController::class)->group(function () {
@@ -89,6 +91,12 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
         Route::post('appointments/{appointment}/confirm', 'confirmBookingProvider');
         Route::post('appointments/{appointment}/complete', 'completeBookingProvider');
         Route::post('appointments/{appointment}/cancel', 'cancelBookingProvider');
+    });
+
+    // OperatingHoursController Routes - For providers to manage their operating hours
+    Route::controller(OperatingHoursController::class)->group(function () {
+        Route::get('provider/operating-hours', 'getMyOperatingHours'); // Get operating hours for authenticated provider
+        Route::put('provider/operating-hours', 'updateMyOperatingHours'); // Update operating hours for authenticated provider
     });
 });
 

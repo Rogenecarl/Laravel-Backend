@@ -21,6 +21,10 @@ class ServiceResource extends JsonResource
             'description' => $this->description,
             'price_min' => $this->price_min,
             'price_max' => $this->price_max,
+            'is_active' => $this->is_active,
+            'sort_order' => $this->sort_order,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

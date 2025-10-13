@@ -63,4 +63,15 @@ class ServiceService
     {
         return $this->getService($id)->delete();
     }
+
+    /**
+     * Get services by provider ID.
+     *
+     * @param int $providerId
+     * @return Collection
+     */
+    public function getServicesByProvider(int $providerId): Collection
+    {
+        return Services::where('provider_id', $providerId)->get();
+    }
 }

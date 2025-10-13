@@ -22,13 +22,27 @@ class UpdateServicesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "provider_id" => "required|integer|exists:providers,id",
-            "name" => "required|string|max:255",
+            "name" => "sometimes|string|max:255",
             "description" => "nullable|string",
-            "price_min" => "required|integer|min:0",
-            "price_max" => "required|integer|min:0|gte:price_min",
+            "price_min" => "sometimes|integer|min:0",
+            "price_max" => "sometimes|integer|min:0|gte:price_min",
             "is_active" => "boolean",
             "sort_order" => "integer|min:0",
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.max' => 'Service name cannot exceed 255 characters.',
+            'price_min.min' => 'Minimum price cannot be negative.',
+            'price_max.min' => 'Maximum price cannot be negative.',
+            'price_max.gte' => 'Maximum price must be greater than or equal to minimum price.',
         ];
     }
 }

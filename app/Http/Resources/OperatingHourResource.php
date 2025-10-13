@@ -12,15 +12,17 @@ class OperatingHourResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-
     public function toArray(Request $request): array
     {
         return [
-            "provider_id" => $this->provider_id,
-            "day_of_week" => $this->day_of_week,
-            "start_time" => $this->start_time,
-            "end_time" => $this->end_time,
-            "is_closed" => $this->is_closed,
+            'id' => $this->id,
+            'provider_id' => $this->provider_id,
+            'day_of_week' => $this->day_of_week,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'is_closed' => $this->is_closed,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }
