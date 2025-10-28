@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Appointment;
 use App\Policies\AppointmentPolicy;
@@ -23,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Appointment::class, AppointmentPolicy::class);
+
+        // if($this->app->environment('production')) {
+        //     URL::forceScheme('https');
+        // }
 
     }
 }

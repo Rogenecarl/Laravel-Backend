@@ -414,4 +414,34 @@ class AppointmentService
             ->orderBy('start_time', 'asc')
             ->get();
     }
+
+    /**
+     * Get today's appointments for a provider with specific status
+     */
+    public function getTodaysAppointmentsByStatus(Provider $provider, string $status): \Illuminate\Database\Eloquent\Collection
+    {
+        $today = Carbon::today();
+        
+        return $provider->appointments()
+            ->with(['user:id,name', 'services:id,name'])
+            ->where('status', $status)
+            ->whereDate('start_time', $today)
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
+
+    /**
+     * Get appointments count for a specific date range and status
+     */
+    public function getAppointmentsCountForDateRange(Provider $provider, string $startDate, string $endDate, string $status = null): int
+    {
+        $query = $provider->appointments()
+            ->whereBetween('start_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->count();
+    }
 }

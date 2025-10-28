@@ -4,13 +4,13 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperatingHoursController;
+use App\Http\Controllers\Provider\ProviderDashboardFrontendController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\Auth\AuthController;
-
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
@@ -99,6 +99,18 @@ Route::middleware(['auth:sanctum', 'role:provider'])->group(function () {
         Route::post('appointments/{appointment}/confirm', 'confirmBookingProvider');
         Route::post('appointments/{appointment}/complete', 'completeBookingProvider');
         Route::post('appointments/{appointment}/cancel', 'cancelBookingProvider');
+    });
+
+    // Provider Dashboard Routes
+    Route::prefix('provider/dashboard')->controller(ProviderDashboardFrontendController::class)->group(function () {
+        Route::get('overview', 'getDashboardOverview');
+        Route::get('todays-appointments', 'getTodaysAppointments');
+        Route::get('pending-appointments', 'getPendingAppointments');
+        Route::get('monthly-stats', 'getMonthlyStats');
+        Route::get('weekly-stats', 'getWeeklyStats');
+        Route::get('confirmed-appointments-range', 'getConfirmedAppointmentsForDateRange');
+        Route::get('popular-services-stats', 'getPopularServicesStats');
+        Route::get('recent-activity', 'getRecentActivity');
     });
 
     // OperatingHoursController Routes - For providers to manage their operating hours
